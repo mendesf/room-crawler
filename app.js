@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const { getRooms } = require('./room-crawler');
+const { buildURL, evalueatePage } = require('./room-crawler');
 
 const app = express();
 
@@ -10,11 +10,18 @@ app.use(cors());
 
 const port = process.env.PORT || 8080;
 
-app.get('/api/rooms', (req, res) => {
-    console.log(req.query);
-    res.sendStatus(200);
+app.get('/api/rooms', async (req, res) => {
+  try {
+    const url = buildURL(req.query);
+    const rooms = await evalueatePage(url);
+
+    res.json(rooms);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 app.listen(port, () => {
-    console.log(`Server is listening on ${port}`);
+  console.log(`Server is listening on ${port}`);
 });

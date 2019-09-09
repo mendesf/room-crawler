@@ -1,24 +1,11 @@
-const { launch } = require('puppeteer');
+const puppeteer = require('puppeteer');
 const { stringify } = require('querystring');
 const moment = require('moment');
 
 const HOTEL_URL = 'https://myreservations.omnibees.com';
-const DATE_FORMAT = 'YYYYMMDD';
 
-module.exports.getRooms = getRooms;
-
-function getRooms(checkIn, checkOut) {
-  checkIn = moment(checkIn).format(DATE_FORMAT);
-  checkOut = moment(checkOut).format(DATE_FORMAT);
-
-  const query = buildQuery(checkIn, checkOut);
-  const url = `${HOTEL_URL}/default.aspx?${query}`;
-
-  return evalueatePage(url);
-}
-
-async function evalueatePage(url) {
-  const browser = await launch();
+module.exports.evalueatePage = async (url) => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
   await page.goto(url);
@@ -45,7 +32,9 @@ async function evalueatePage(url) {
   return roomsData;
 }
 
-function buildQuery(checkIn, checkOut) {
+module.exports.buildURL = (reservationInfo) => {
+  const { checkIn, checkOut, adults, children, ages } = reservationInfo;
+
   const query = {
     q: '5462',
     version: 'MyReservation',
@@ -57,10 +46,12 @@ function buildQuery(checkIn, checkOut) {
     group_code: '',
     loyality_card: '',
     NRooms: 1,
-    ad: 1,
-    ch: 0,
-    ag: '-'
+    ad: adults,
+    ch: children,
+    ag: ages
   };
 
-  return stringify(query);
+  const queryString = stringify(query);
+
+  return `${HOTEL_URL}/default.aspx?${queryString}`;
 }
